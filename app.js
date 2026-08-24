@@ -98,7 +98,8 @@ function lobby() {
 function startGame() {
   const selected=[cast[0],...cast.slice(1).sort(()=>Math.random()-.5).slice(0,s.g.players.length-1)];
   [...s.g.players].sort(()=>Math.random()-.5).forEach((p,i)=>p.card=selected[i]);
-  Object.assign(s.g,{phase:'play',turn:Math.floor(Math.random()*s.g.players.length),available:selected,log:['แขกทุกคนได้รับบัตรตัวตนลับแล้ว','ถึงเวลาสังเกต ตั้งคำถาม และหาความจริง'],pending:null,dances:[]});
+  const eligible=s.g.players.map((p,i)=>p.card.name==='Dracula'?-1:i).filter(i=>i>=0);
+  Object.assign(s.g,{phase:'play',turn:eligible[Math.floor(Math.random()*eligible.length)],available:selected,log:['แขกทุกคนได้รับบัตรตัวตนลับแล้ว','ถึงเวลาสังเกต ตั้งคำถาม และหาความจริง'],pending:null,dances:[]});
   sync(); game();
 }
 function draw(){ if(s.g.phase==='lobby') lobby(); else game(); }
@@ -109,7 +110,7 @@ function game() {
   const mustDance=['Boogie Monster','Dr. Jekyll','Ghost'].includes(me.card?.name);
   let center='';
   if(g.phase==='end') center=`<div class="result"><div>♛</div><h3>${clean(g.winner.name)} ชนะงานเลี้ยง!</h3><p>${g.accused?`กล่าวหา ${clean(g.accused.name)} ได้ถูกต้องว่าเป็น ${g.accused.card.name}`:'Alucard เต้นรำกับ Dracula สำเร็จ'}</p>${s.host?'<button class="primary" id="restart">เล่นอีกครั้ง</button>':''}</div>`;
-  else if(offer) center=`<div class="reveal-card"><div>♫</div><h3>${clean(g.pending.fromName)} ชวนคุณเต้นรำ</h3><p>${mustDance?'เอฟเฟกต์การ์ดของคุณบังคับให้ตอบตกลง':'หากตอบตกลง ทั้งสองฝ่ายจะเห็นตัวตนของกันและกันตลอดเกม'}</p><button class="primary" id="yes">ตกลงเต้นรำ</button>${mustDance?'':'<button class="outline" id="no">ปฏิเสธ</button>'}</div>`;
+  else if(offer) center=`<div class="reveal-card"><div>♫</div><h3>${clean(g.pending.fromName)} ชวนคุณเต้นรำ</h3><p>${mustDance?'เอฟเฟกต์การ์ดของคุณบังคับให้ตอบตกลง':'หากตอบตกลง ทั้งสองฝ่ายจะเห็นตัวตนของกันและกันตลอดเกม'}</p><button class="primary" id="yes">ตกลงเต้นรำ</button>${mustDance?'<button class="outline" disabled>ปฏิเสธไม่ได้ — เอฟเฟกต์ตัวละคร</button>':'<button class="outline" id="no">ปฏิเสธ</button>'}</div>`;
   else if(questionOffer){const required=requiredAnswer(g,me,g.pending.from,g.pending.type);center=`<div class="reveal-card"><div>?</div><h3>${clean(g.pending.fromName)} ถามคุณ</h3><p>${clean(g.pending.text)}</p><p class="required-answer">กฎของการ์ดคุณกำหนดให้ตอบ <b>${required?'YES':'NO'}</b></p><button class="primary" id="answer-yes">YES</button><button class="outline" id="answer-no">NO</button></div>`;}
   else if(active.id===myId()) center=turnScreen(g,me);
   else center=`<div class="instruction">กำลังรอ <b>${clean(active.name)}</b> เลือกการกระทำ…</div><div class="player-grid table-grid">${g.players.map(p=>tile(p)).join('')}</div>`;
