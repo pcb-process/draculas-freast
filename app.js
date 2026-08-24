@@ -118,7 +118,7 @@ function game() {
   else if(questionOffer){const required=requiredAnswer(g,me,g.pending.from,g.pending.type);center=`<div class="reveal-card"><div>?</div><h3>${clean(g.pending.fromName)} ถามคุณ</h3><p>${clean(g.pending.text)}</p><p class="required-answer">กฎของการ์ดคุณกำหนดให้ตอบ <b>${required?'YES':'NO'}</b></p><button class="primary" id="answer-yes">YES</button><button class="outline" id="answer-no">NO</button></div>`;}
   else if(active.id===myId()) center=turnScreen(g,me);
   else center=`<div class="instruction">กำลังรอ <b>${clean(active.name)}</b> เลือกการกระทำ…</div><div class="player-grid table-grid">${g.players.map(p=>tile(p)).join('')}</div>`;
-  app.innerHTML=`<section class="game"><header><div class="brand">♛ <span>DRACULA’S FEAST</span></div><div class="round">✦ ตาของ ${clean(active.name)}</div><div class="room-tag">ห้อง ${s.room}</div></header><div class="game-main"><aside><p class="eyebrow">YOUR IDENTITY</p><div class="role-card">${me.card?.image?`<img class="role-portrait" src="${me.card.image}" alt="ภาพตัวละคร ${clean(me.card.name)}">`:''}<div class="role-icon">${me.card?.icon||'?'}</div><h3>${me.card?.name||'กำลังแจกบัตร…'}</h3><p>${me.card?.clue||''}</p><p class="card-rule">${me.card?.rule||''}</p></div><div class="chronicle"><b>บันทึกงานเลี้ยง</b>${g.log.slice(-5).reverse().map(x=>'<p>'+clean(x)+'</p>').join('')}</div></aside><section class="table"><p class="eyebrow">FIND THE MONSTERS</p><h2>${g.phase==='end'?'คำตอบปรากฏแล้ว':'ใครกันแน่ที่อยู่ตรงหน้า?'}</h2>${center}</section></div></section>`;
+  app.innerHTML=`<section class="game"><header><div class="brand">♛ <span>DRACULA’S FEAST</span></div><div class="round">✦ ตาของ ${clean(active.name)}</div><button class="guide-button" id="guide">☰ คู่มือตัวละคร</button><div class="room-tag">ห้อง ${s.room}</div></header><div class="game-main"><aside><p class="eyebrow">การ์ดลับของคุณ — ห้ามบอกผู้อื่น</p><div class="role-card">${me.card?.image?`<img class="role-portrait" src="${me.card.image}" alt="ภาพตัวละคร ${clean(me.card.name)}">`:''}<div class="role-icon">${me.card?.icon||'?'}</div><h3>${me.card?.name||'กำลังแจกบัตร…'}</h3><p class="ability-label">ความสามารถ</p><p class="card-rule">${me.card?.rule||''}</p></div><div class="chronicle"><b>บันทึกงานเลี้ยง</b>${g.log.slice(-5).reverse().map(x=>'<p>'+clean(x)+'</p>').join('')}</div></aside><section class="table"><p class="eyebrow">FIND THE MONSTERS</p><h2>${g.phase==='end'?'คำตอบปรากฏแล้ว':'ใครกันแน่ที่อยู่ตรงหน้า?'}</h2>${center}</section></div></section>`;
   document.querySelectorAll('[data-player]').forEach(el=>el.addEventListener('click',()=>chooseTarget(el.dataset.player)));
   const yes=document.querySelector('#yes'), no=document.querySelector('#no'), answerYes=document.querySelector('#answer-yes'), answerNo=document.querySelector('#answer-no'), restart=document.querySelector('#restart');
   if(yes) yes.addEventListener('click',()=>dispatch({kind:'danceReply',yes:true}));
@@ -126,6 +126,12 @@ function game() {
   if(answerYes) answerYes.addEventListener('click',()=>dispatch({kind:'inquireReply',answer:true}));
   if(answerNo) answerNo.addEventListener('click',()=>dispatch({kind:'inquireReply',answer:false}));
   if(restart) restart.addEventListener('click',restartGame);
+  document.querySelector('#guide').addEventListener('click',showGuide);
+}
+function showGuide(){
+  const sheet=document.createElement('section'); sheet.className='guide-overlay';
+  sheet.innerHTML=`<div class="guide-panel"><button class="guide-close" id="close-guide" aria-label="ปิดคู่มือ">×</button><p class="eyebrow">REFERENCE CARD</p><h2>คู่มือตัวละคร</h2><p>ทุกคนดูหน้านี้ได้ เพื่อเข้าใจกติกาและเงื่อนไขพิเศษของแต่ละบทบาท</p><div class="guide-grid">${cast.map(c=>`<article><img src="${c.image}" alt=""><div><h3>${c.icon} ${c.name}</h3><p>${c.rule}</p></div></article>`).join('')}</div></div>`;
+  document.body.append(sheet); document.querySelector('#close-guide').addEventListener('click',()=>sheet.remove());
 }
 function turnScreen(g,me) {
   const p=g.pending;
