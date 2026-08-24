@@ -103,7 +103,7 @@ function game() {
 }
 function turnScreen(g,me) {
   const p=g.pending;
-  if(p?.from===myId()) return `<div class="instruction">กำลังรอคำตอบจาก ${clean(p.targetName)}…</div>`;
+  if(p?.kind==='dance'&&p.from===myId()) return `<div class="instruction">กำลังรอคำตอบจาก ${clean(p.targetName)}…</div>`;
   if(p&&!p.target) return `<div class="instruction">เลือกแขกที่คุณต้องการ${p.kind==='inquire'?'ถาม':p.kind==='dance'?'ชวนเต้นรำ':'กล่าวหา'}</div><div class="player-grid table-grid">${g.players.map(x=>tile(x,x.id!==me.id)).join('')}</div>`;
   if(p?.kind==='inquire') return `<div class="instruction">เลือกคำถามเพื่อถาม ${clean(p.targetName)}</div><div class="question-list">${qs.map(([type,text])=>'<button class="outline ask" data-type="'+type+'">'+text+'</button>').join('')}</div>`;
   if(p?.kind==='accuse') return `<div class="instruction">คุณกำลังกล่าวหา ${clean(p.targetName)} ว่าเป็นใคร?</div><div class="question-list">${cast.slice(0,g.players.length).map(c=>'<button class="outline accuse" data-name="'+c.name+'">'+c.icon+' '+c.name+'</button>').join('')}</div>`;
