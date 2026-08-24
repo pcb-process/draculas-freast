@@ -13,7 +13,11 @@ const cast = [
   ['Alucard','☾','ตอบ YES เมื่อถูกถามว่าเป็น Dracula; ชนะเมื่อเต้นกับ Dracula หรือถูกกล่าวหาว่าเป็น Dracula'],
   ['Zombie','☣','หากผู้เล่นก่อนหน้าเต้นรำ คุณต้องชวนเต้น; เมื่อถูกเพื่อนข้างเคียงถาม คุณต้องโกหก'],
   ['Witch','✦','เมื่อถูกเพื่อนข้างเคียงถาม คุณต้องโกหก']
-].map(([name,icon,rule])=>({name,icon,rule}));
+].map(([name,icon,rule])=>({name,icon,rule,image:`./assets/characters/${({
+  'Dracula':'dracula','Boogie Monster':'boogie-monster','Dr. Jekyll':'dr-jekyll','Ghost':'ghost',
+  'Swamp Creature':'swamp-creature','Trickster':'trickster','Van Helsing':'van-helsing',
+  'Alucard':'alucard','Zombie':'zombie','Witch':'witch'
+}[name])}.png`}));
 const qs = cast.map(card=>[card.name,`คุณคือ ${card.name} ใช่ไหม?`]);
 const clean = v => String(v ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const myId = () => s.peer?.id;
@@ -114,7 +118,7 @@ function game() {
   else if(questionOffer){const required=requiredAnswer(g,me,g.pending.from,g.pending.type);center=`<div class="reveal-card"><div>?</div><h3>${clean(g.pending.fromName)} ถามคุณ</h3><p>${clean(g.pending.text)}</p><p class="required-answer">กฎของการ์ดคุณกำหนดให้ตอบ <b>${required?'YES':'NO'}</b></p><button class="primary" id="answer-yes">YES</button><button class="outline" id="answer-no">NO</button></div>`;}
   else if(active.id===myId()) center=turnScreen(g,me);
   else center=`<div class="instruction">กำลังรอ <b>${clean(active.name)}</b> เลือกการกระทำ…</div><div class="player-grid table-grid">${g.players.map(p=>tile(p)).join('')}</div>`;
-  app.innerHTML=`<section class="game"><header><div class="brand">♛ <span>DRACULA’S FEAST</span></div><div class="round">✦ ตาของ ${clean(active.name)}</div><div class="room-tag">ห้อง ${s.room}</div></header><div class="game-main"><aside><p class="eyebrow">YOUR IDENTITY</p><div class="role-card"><div class="role-icon">${me.card?.icon||'?'}</div><h3>${me.card?.name||'กำลังแจกบัตร…'}</h3><p>${me.card?.clue||''}</p><p class="card-rule">${me.card?.rule||''}</p></div><div class="chronicle"><b>บันทึกงานเลี้ยง</b>${g.log.slice(-5).reverse().map(x=>'<p>'+clean(x)+'</p>').join('')}</div></aside><section class="table"><p class="eyebrow">FIND THE MONSTERS</p><h2>${g.phase==='end'?'คำตอบปรากฏแล้ว':'ใครกันแน่ที่อยู่ตรงหน้า?'}</h2>${center}</section></div></section>`;
+  app.innerHTML=`<section class="game"><header><div class="brand">♛ <span>DRACULA’S FEAST</span></div><div class="round">✦ ตาของ ${clean(active.name)}</div><div class="room-tag">ห้อง ${s.room}</div></header><div class="game-main"><aside><p class="eyebrow">YOUR IDENTITY</p><div class="role-card">${me.card?.image?`<img class="role-portrait" src="${me.card.image}" alt="ภาพตัวละคร ${clean(me.card.name)}">`:''}<div class="role-icon">${me.card?.icon||'?'}</div><h3>${me.card?.name||'กำลังแจกบัตร…'}</h3><p>${me.card?.clue||''}</p><p class="card-rule">${me.card?.rule||''}</p></div><div class="chronicle"><b>บันทึกงานเลี้ยง</b>${g.log.slice(-5).reverse().map(x=>'<p>'+clean(x)+'</p>').join('')}</div></aside><section class="table"><p class="eyebrow">FIND THE MONSTERS</p><h2>${g.phase==='end'?'คำตอบปรากฏแล้ว':'ใครกันแน่ที่อยู่ตรงหน้า?'}</h2>${center}</section></div></section>`;
   document.querySelectorAll('[data-player]').forEach(el=>el.addEventListener('click',()=>chooseTarget(el.dataset.player)));
   const yes=document.querySelector('#yes'), no=document.querySelector('#no'), answerYes=document.querySelector('#answer-yes'), answerNo=document.querySelector('#answer-no'), restart=document.querySelector('#restart');
   if(yes) yes.addEventListener('click',()=>dispatch({kind:'danceReply',yes:true}));
