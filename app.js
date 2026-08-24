@@ -29,6 +29,7 @@ const transmit = msg => s.conn?.open && s.conn.send(msg);
 const roomCode = () => Array.from({length:5},()=> 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
 function neighbours(g,a,b){const x=g.players.findIndex(p=>p.id===a),y=g.players.findIndex(p=>p.id===b),n=g.players.length;return Math.abs(x-y)===1||Math.abs(x-y)===n-1}
 function requiredAnswer(g,target,asking,asked){ return inquiryAnswer({players:g.players,respondent:{...target,guest:target.card},askerId:asking,askedGuestId:asked}); }
+function flash(g,icon,title,body){ g.flash={id:`${Date.now()}-${Math.random()}`,icon,title,body}; }
 function accusationTargets(g, actor){
   if(actor.card.id==='swamp'){
     const i=g.players.findIndex(p=>p.id===actor.id), left=g.players[(i+g.players.length-1)%g.players.length], right=g.players[(i+1)%g.players.length];
@@ -121,7 +122,9 @@ function game() {
   else if(questionOffer){const required=requiredAnswer(g,me,g.pending.from,g.pending.type);center=`<div class="reveal-card"><div>?</div><h3>${clean(g.pending.fromName)} ถามคุณ</h3><p>${clean(g.pending.text)}</p><p class="required-answer">กฎของการ์ดคุณกำหนดให้ตอบ <b>${required?'YES':'NO'}</b></p><button class="primary" id="answer-yes">YES</button><button class="outline" id="answer-no">NO</button></div>`;}
   else if(active.id===myId()) center=turnScreen(g,me);
   else center=`<div class="instruction">กำลังรอ <b>${clean(active.name)}</b> เลือกการกระทำ…</div><div class="player-grid table-grid">${g.players.map(p=>tile(p)).join('')}</div>`;
-  app.innerHTML=`<section class="game"><header><div class="brand">♛ <span>DRACULA’S FEAST</span></div><div class="round">✦ ตาของ ${clean(active.name)}</div><button class="guide-button" id="guide">☰ คู่มือตัวละคร</button><div class="room-tag">ห้อง ${s.room}</div></header><div class="game-main"><aside><p class="eyebrow">การ์ดลับของคุณ — ห้ามบอกผู้อื่น</p><div class="role-card">${me.card?.image?`<img class="role-portrait" src="${me.card.image}" alt="ภาพตัวละคร ${clean(me.card.name)}">`:''}<div class="role-icon">${me.card?.icon||'?'}</div><h3>${me.card?.name||'กำลังแจกบัตร…'}</h3><p class="ability-label">ความสามารถ</p><p class="card-rule">${me.card?.rule||''}</p></div><div class="chronicle"><b>บันทึกงานเลี้ยง</b>${g.log.slice(-5).reverse().map(x=>'<p>'+clean(x)+'</p>').join('')}</div></aside><section class="table"><p class="eyebrow">FIND THE MONSTERS</p><h2>${g.phase==='end'?'คำตอบปรากฏแล้ว':'ใครกันแน่ที่อยู่ตรงหน้า?'}</h2>${s.whisper?`<div class="whisper"><b>คำตอบลับ</b><p>${clean(s.whisper.question)}</p><strong>${s.whisper.answer}</strong><button id="dismiss-whisper">ปิด</button></div>`:''}${center}</section></div></section>`;
+  const eventPopup=g.flash&&s.hiddenFlash!==g.flash.id?`<div class="event-popup"><div class="event-mark">${g.flash.icon}</div><div><b>${clean(g.flash.title)}</b><p>${clean(g.flash.body)}</p></div><button id="dismiss-event" aria-label="ปิด">×</button></div>`:'';
+  const order=`<div class="turn-order"><span>ลำดับเล่น</span>${g.players.map((p,i)=>`<div class="turn-chip ${i===g.turn?'now':''}">${i+1}. ${clean(p.name)}</div>`).join('')}</div>`;
+  app.innerHTML=`<section class="game"><header><div class="brand">♛ <span>DRACULA’S FEAST</span></div><div class="round">✦ ตาของ ${clean(active.name)}</div><button class="guide-button" id="guide">☰ คู่มือตัวละคร</button><div class="room-tag">ห้อง ${s.room}</div></header><div class="game-main"><aside><p class="eyebrow">การ์ดลับของคุณ — ห้ามบอกผู้อื่น</p><div class="role-card">${me.card?.image?`<img class="role-portrait" src="${me.card.image}" alt="ภาพตัวละคร ${clean(me.card.name)}">`:''}<div class="role-icon">${me.card?.icon||'?'}</div><h3>${me.card?.name||'กำลังแจกบัตร…'}</h3><p class="ability-label">ความสามารถ</p><p class="card-rule">${me.card?.rule||''}</p></div></aside><section class="table"><p class="eyebrow">FIND THE MONSTERS</p><h2>${g.phase==='end'?'คำตอบปรากฏแล้ว':'ใครกันแน่ที่อยู่ตรงหน้า?'}</h2>${order}${s.whisper?`<div class="whisper"><b>คำตอบลับ</b><p>${clean(s.whisper.question)}</p><strong>${s.whisper.answer}</strong><button id="dismiss-whisper">ปิด</button></div>`:''}${eventPopup}${center}</section></div></section>`;
   document.querySelectorAll('[data-player]').forEach(el=>el.addEventListener('click',()=>chooseTarget(el.dataset.player)));
   document.querySelectorAll('[data-assign]').forEach(el=>el.addEventListener('click',()=>{s.g.pending.selecting=el.dataset.assign;draw();}));
   document.querySelectorAll('[data-helsing]').forEach(el=>el.addEventListener('click',()=>dispatch({kind:'helsing',target:el.dataset.helsing})));
@@ -136,6 +139,7 @@ function game() {
   document.querySelector('#jekyll-swap')?.addEventListener('click',()=>dispatch({kind:'jekyllSwap'}));
   document.querySelector('#jekyll-skip')?.addEventListener('click',()=>dispatch({kind:'jekyllSkip'}));
   document.querySelector('#dismiss-whisper')?.addEventListener('click',()=>{s.whisper=null;game();});
+  document.querySelector('#dismiss-event')?.addEventListener('click',()=>{s.hiddenFlash=g.flash.id;game();});
   document.querySelector('#guide').addEventListener('click',showGuide);
 }
 function showGuide(){
@@ -172,7 +176,11 @@ document.addEventListener('click',e=>{
 function dispatch(msg){ if(s.host) hostMessage(msg); else transmit(msg); }
 function hostMessage(msg) {
   const g=s.g, actor=g.players[g.turn];
-  if(msg.kind==='target'){g.pending={kind:msg.action,target:msg.target,targetName:msg.targetName,from:actor.id,fromName:actor.name}; sync(); game(); return;}
+  if(msg.kind==='target'){
+    g.pending={kind:msg.action,target:msg.target,targetName:msg.targetName,from:actor.id,fromName:actor.name};
+    if(msg.action==='dance') flash(g,'♫','มีคำชวนเต้นรำ',`${actor.name} ชวน ${msg.targetName} เต้นรำ`);
+    sync(); game(); return;
+  }
   if(msg.kind==='inquire'){
     const target=g.players.find(p=>p.id===msg.target), text=qs.find(q=>q[0]===msg.type)[1];
     g.pending={kind:'inquireReply',target:target.id,targetName:target.name,from:actor.id,fromName:actor.name,type:msg.type,text};
@@ -182,6 +190,7 @@ function hostMessage(msg) {
     const target=g.players.find(p=>p.id===g.pending.target);
     const required=requiredAnswer(g,target,g.pending.from,g.pending.type);
     g.log.push(`${g.pending.fromName} ถาม ${target.name} เป็นการส่วนตัว`);
+    flash(g,'?','การถามเสร็จสิ้น',`${g.pending.fromName} ได้รับคำตอบลับจาก ${target.name}`);
     const whisper={kind:'whisper',question:g.pending.text,answer:required?'YES':'NO'};
     if(g.pending.from===myId()) s.whisper=whisper;
     else Object.values(s.peer.connections||{}).flat().filter(c=>c.peer===g.pending.from&&c.open).forEach(c=>c.send(whisper));
@@ -191,11 +200,13 @@ function hostMessage(msg) {
     const target=g.players.find(p=>p.id===g.pending.target), forced=['Boogie Monster','Dr. Jekyll','Ghost'].includes(target.card.name), accepted=msg.yes||forced;
     if(accepted){
       g.dances.push([g.pending.from,target.id]); g.log.push(`${actor.name} และ ${target.name} เต้นรำด้วยกัน และแลกเปลี่ยนตัวตน`);
+      flash(g,'♫','เต้นรำสำเร็จ',`${actor.name} และ ${target.name} เห็นตัวตนของกันและกันแล้ว`);
       g.lastDance=true;
       const pair=[actor.card.name,target.card.name];
       if(pair.includes('Alucard')&&pair.includes('Dracula')){Object.assign(g,{phase:'end',winner:pair[0]==='Alucard'?actor:target,accused:null,pending:null});sync();game();return;}
     } else {
       g.log.push(`${target.name} ปฏิเสธคำชวนเต้นรำของ ${actor.name}`);
+      flash(g,'×','ปฏิเสธการเต้นรำ',`${target.name} ปฏิเสธคำชวนของ ${actor.name}`);
       if(actor.card.id==='zombie'){target.revealed=true;g.pending={kind:'accusePlan',assignments:{},forced:true};sync();game();return;}
       g.pending={kind:'inquire',blocked:target.id};sync();game();return;
     }
