@@ -97,8 +97,8 @@ function lobby() {
 }
 function startGame() {
   const selected=[cast[0],...cast.slice(1).sort(()=>Math.random()-.5).slice(0,s.g.players.length-1)];
-  s.g.players.sort(()=>Math.random()-.5).forEach((p,i)=>p.card=selected[i]);
-  Object.assign(s.g,{phase:'play',turn:0,available:selected,log:['แขกทุกคนได้รับบัตรตัวตนลับแล้ว','ถึงเวลาสังเกต ตั้งคำถาม และหาความจริง'],pending:null,dances:[]});
+  [...s.g.players].sort(()=>Math.random()-.5).forEach((p,i)=>p.card=selected[i]);
+  Object.assign(s.g,{phase:'play',turn:Math.floor(Math.random()*s.g.players.length),available:selected,log:['แขกทุกคนได้รับบัตรตัวตนลับแล้ว','ถึงเวลาสังเกต ตั้งคำถาม และหาความจริง'],pending:null,dances:[]});
   sync(); game();
 }
 function draw(){ if(s.g.phase==='lobby') lobby(); else game(); }
@@ -116,10 +116,10 @@ function game() {
   app.innerHTML=`<section class="game"><header><div class="brand">♛ <span>DRACULA’S FEAST</span></div><div class="round">✦ ตาของ ${clean(active.name)}</div><div class="room-tag">ห้อง ${s.room}</div></header><div class="game-main"><aside><p class="eyebrow">YOUR IDENTITY</p><div class="role-card"><div class="role-icon">${me.card?.icon||'?'}</div><h3>${me.card?.name||'กำลังแจกบัตร…'}</h3><p>${me.card?.clue||''}</p><p class="card-rule">${me.card?.rule||''}</p></div><div class="chronicle"><b>บันทึกงานเลี้ยง</b>${g.log.slice(-5).reverse().map(x=>'<p>'+clean(x)+'</p>').join('')}</div></aside><section class="table"><p class="eyebrow">FIND THE MONSTERS</p><h2>${g.phase==='end'?'คำตอบปรากฏแล้ว':'ใครกันแน่ที่อยู่ตรงหน้า?'}</h2>${center}</section></div></section>`;
   document.querySelectorAll('[data-player]').forEach(el=>el.addEventListener('click',()=>chooseTarget(el.dataset.player)));
   const yes=document.querySelector('#yes'), no=document.querySelector('#no'), answerYes=document.querySelector('#answer-yes'), answerNo=document.querySelector('#answer-no'), restart=document.querySelector('#restart');
-  if(yes) yes.addEventListener('click',()=>transmit({kind:'danceReply',yes:true}));
-  if(no) no.addEventListener('click',()=>transmit({kind:'danceReply',yes:false}));
-  if(answerYes) answerYes.addEventListener('click',()=>transmit({kind:'inquireReply',answer:true}));
-  if(answerNo) answerNo.addEventListener('click',()=>transmit({kind:'inquireReply',answer:false}));
+  if(yes) yes.addEventListener('click',()=>dispatch({kind:'danceReply',yes:true}));
+  if(no) no.addEventListener('click',()=>dispatch({kind:'danceReply',yes:false}));
+  if(answerYes) answerYes.addEventListener('click',()=>dispatch({kind:'inquireReply',answer:true}));
+  if(answerNo) answerNo.addEventListener('click',()=>dispatch({kind:'inquireReply',answer:false}));
   if(restart) restart.addEventListener('click',restartGame);
 }
 function turnScreen(g,me) {
